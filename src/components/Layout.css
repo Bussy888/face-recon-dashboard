@@ -1,0 +1,183 @@
+/* Estilo general para el Sidebar */
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: #201c24;
+  color: #fff;
+  padding-top: 20px;
+  position: fixed;  /* Lo fijamos en la pantalla */
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 2;  /* Asegura que el sidebar esté sobre el contenido */
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+/* Cuando el sidebar está abierto */
+.sidebar.open {
+  transform: translateX(0);
+}
+
+
+/* Logo dentro del sidebar */
+.sidebar .logo {
+  width: 100%;
+  margin-bottom: 30px;
+  padding-top: 90px;
+}
+
+/* Estilo de los enlaces convertidos en botones */
+.sidebar-btn {
+  display: block;
+  padding: 10px 20px;
+  margin: 2px 0;
+  background-color: #201c24;
+  color: white;
+  text-decoration: none;
+  
+  font-size: 20px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Listas en el Sidebar */
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar ul li {
+  margin: 2px 0;
+}
+
+/* Hover en los botones */
+.sidebar-btn:hover {
+  background-color: #2f2c32;
+  transform: scale(1.05);
+}
+
+/* Contenedor principal del contenido */
+/* Contenedor principal del contenido */
+.main-content {
+  padding-bottom: 20px;
+  width: 100%;
+  height: 100vh;
+  transition: padding-left 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative; /* Añadimos esta propiedad para que no se vea afectado por el sidebar */
+}
+
+
+
+/* Cuando el sidebar está cerrado */
+.main-content.sidebar-closed {
+  padding-left: 0; /* Ajuste cuando el sidebar está cerrado */
+}
+
+
+/* Área de contenido que se muestra dentro del layout */
+.children {
+  flex-grow: 1;
+  background-color: #fff;
+  padding-top: 20px;
+}
+
+/* Botón de toggle del sidebar */
+/* Botón de toggle del sidebar */
+.toggle-sidebar-btn {
+  position: fixed;
+  top: 15px;
+  left: 10px;
+  padding: 10px 15px;
+  background-color: #201c24;
+  color: white;
+  border: none;
+  cursor: pointer;
+  z-index: 3;  /* Asegura que el botón esté encima del sidebar */
+  font-size: 20px;
+}
+
+
+.toggle-sidebar-btn:hover {
+  background-color: #2f2c32;
+}
+
+/* Estilo para el Header */
+.header {
+  background-color: #201c24;
+  padding: 30px 20px;
+  border-bottom: 2px solid #ddd;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+
+/* Información del usuario */
+.header .user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: white;
+  font-size: 14px;
+  margin-right: 40px;
+}
+
+.header .user-info p {
+  margin: 0;
+}
+
+/* Logo en el header */
+.header .logo {
+  height: 30px;
+  object-fit: contain;
+}
+.logout-btn{
+  /*enviar hasta abajo*/
+  position: absolute;
+  bottom: 10px;
+  margin-left: 10px;
+  padding: 10px 15px;
+  background-color: #201c24;
+  color: white;
+  border: none;
+  cursor: pointer;
+  z-index: 3;
+  font-size: 20px;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    transform: translateX(-100%);
+    z-index: 2;
+    height: 100%;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    padding-left: 0 !important;
+    width: 100%;
+  }
+
+  .main-content.sidebar-closed {
+    padding-left: 0;
+  }
+
+  .toggle-sidebar-btn {
+    left: 10px;
+  }
+}

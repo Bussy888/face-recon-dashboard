@@ -1,25 +1,40 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect } from 'react';
+import { Routes } from 'react-router-dom';
+import AuthRoutes from './routes/AuthRoutes';
+import PrivateRoutes from './routes/PrivateRoutes';
+import { useUserStore } from './store/useUserStore';
+import { CircularProgress, Box } from '@mui/material';
 
-function App() {
+const App = () => {
+  const initializeUser = useUserStore((state) => state.initializeUser);
+  const isLoading = useUserStore((state) => state.isLoading);
+
+  useEffect(() => {
+    const unsubscribe = initializeUser();
+    return () => unsubscribe && unsubscribe();
+  }, [initializeUser]);
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      {AuthRoutes}
+      {PrivateRoutes}
+    </Routes>
   );
-}
+};
 
 export default App;
