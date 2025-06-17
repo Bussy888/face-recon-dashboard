@@ -83,7 +83,7 @@ const GestionSocios = () => {
         <Button
           variant="contained"
           color="primary"
-          onClick={() => navigate('/registrar-socio')}
+          onClick={() => navigate('/registrar-estudiante')}
         >
           Registrar Estudiante
         </Button>
@@ -112,7 +112,7 @@ const GestionSocios = () => {
                 <TableCell>
                   <IconButton
                     color="primary"
-                    onClick={() => navigate(`/editar-socio/${socio.codigo}`)}
+                    onClick={() => navigate(`/editar-estudiante/${socio.codigo}`)}
                   >
                     <Edit />
                   </IconButton>

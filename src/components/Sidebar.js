@@ -47,7 +47,7 @@ const Sidebar = ({ className, user, closeSidebar }) => {
 
         {hasPermission('gestion-socios') && (
           <li>
-            <Link to="/gestion-socios" className="sidebar-btn" onClick={closeSidebar}>Gestión de Estudiantes</Link>
+            <Link to="/gestion-estudiante" className="sidebar-btn" onClick={closeSidebar}>Gestión de Estudiantes</Link>
           </li>
         )}
 

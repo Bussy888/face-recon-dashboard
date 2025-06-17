@@ -39,9 +39,9 @@ const PrivateRoutes = [
     <Route path="/gestion-eventos" element={<GestionEventos />} />
     <Route path="/crear-evento" element={<CrearEvento />} />
     <Route path="/editar-evento/:id" element={<CrearEvento />} />
-    <Route path="/gestion-socios" element={<GestionSocios />} />
-    <Route path="/registrar-socio" element={<RegistrarSocio />} />
-    <Route path="/editar-socio/:codigo" element={<EditarSocio />} />
+    <Route path="/gestion-estudiante" element={<GestionSocios />} />
+    <Route path="/registrar-estudiante" element={<RegistrarSocio />} />
+    <Route path="/editar-estudiante/:codigo" element={<EditarSocio />} />
   </Route>,
 ];
 

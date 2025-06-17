@@ -1,19 +1,19 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Dashboard - Transmite",
+  "name": "Control de Acceso de Estudiantes - Transmite",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "Only-Logo-Transmite.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "Only-Logo-Transmite192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "logo512.png",
+      "src": "Only-Logo-Transmite192.png",
       "type": "image/png",
       "sizes": "512x512"
     }
