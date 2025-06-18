@@ -51,10 +51,14 @@ const CrearEvento = () => {
   });
 
   const handleSubmit = async (values) => {
+    const valoresAEnviar = {
+      ...values,
+      fecha_evento: values.fecha_evento + 'T12:00:00'
+    };
     if (id) {
-      actualizarEventoApi(id, values);
+      actualizarEventoApi(id, valoresAEnviar);
     } else {
-      crearEventoApi(values);
+      crearEventoApi(valoresAEnviar);
     }
     navigate('/gestion-eventos');
   };
