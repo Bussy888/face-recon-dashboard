@@ -16,12 +16,9 @@ const CrearEvento = () => {
 
   // Función para convertir fecha ISO a formato yyyy-mm-dd
   const convertirFecha = (fecha) => {
-    const fechaObj = new Date(fecha);
-    const año = fechaObj.getFullYear();
-    const mes = String(fechaObj.getMonth() + 1).padStart(2, '0');
-    const dia = String(fechaObj.getDate()).padStart(2, '0');
-    return `${año}-${mes}-${dia}`;
-  };
+  const [año, mes, dia] = fecha.split('-');
+  return `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+};
 
   useEffect(() => {
     const cargarEvento = async () => {
