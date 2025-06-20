@@ -28,7 +28,7 @@ const AgregarEmpleado = () => {
     const cargarRoles = async () => {
       try {
         const response = await obtenerRoles();
-        setRoles(response.data);
+        setRoles(response);
       } catch (error) {
         console.error('Error al cargar roles:', error);
       }
