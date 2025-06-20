@@ -200,7 +200,7 @@ import CapturaRostro from '../components/CapturaRostro';
               {/* Botones */}
               <Grid size={{ xs: 12 }}>
                 <Box display="flex" justifyContent="space-between" mt={2}>
-                  <Button variant="contained" color="error" onClick={() => navigate('/gestion-socios')}>
+                  <Button variant="contained" color="error" onClick={() => navigate('/gestion-estudiantes')}>
                     Cancelar
                   </Button>
                   <Button variant="contained" color="success" type="submit">
