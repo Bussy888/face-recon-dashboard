@@ -78,7 +78,7 @@ import CapturaRostro from '../components/CapturaRostro';
       };
       await actualizarSocioApi(codigo, socioActualizado);
       alert('Estudiante actualizado exitosamente.');
-      navigate('/gestion-socios');
+      navigate('/gestion-estudiante');
     } catch (error) {
       console.error('Error actualizando estudiante:', error);
       alert('Error actualizando estudiante: ' + (error.response?.message || error.message));
@@ -200,7 +200,7 @@ import CapturaRostro from '../components/CapturaRostro';
               {/* Botones */}
               <Grid size={{ xs: 12 }}>
                 <Box display="flex" justifyContent="space-between" mt={2}>
-                  <Button variant="contained" color="error" onClick={() => navigate('/gestion-estudiantes')}>
+                  <Button variant="contained" color="error" onClick={() => navigate('/gestion-estudiante')}>
                     Cancelar
                   </Button>
                   <Button variant="contained" color="success" type="submit">

@@ -53,7 +53,7 @@ const Sidebar = ({ className, user, closeSidebar }) => {
 
         {hasPermission('gestion-cuotas') && (
           <li>
-            <Link to="/gestion-cuotas" className="sidebar-btn" onClick={closeSidebar}>Gestión de Cuotas</Link>
+            <Link to="/gestion-mensualidades" className="sidebar-btn" onClick={closeSidebar}>Gestión de Mensualidades</Link>
           </li>
         )}
 

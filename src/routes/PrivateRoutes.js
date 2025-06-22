@@ -35,7 +35,7 @@ const PrivateRoutes = [
     <Route path="/crear-rol" element={<CrearRol />} />
     <Route path="/editar-rol/:id_rol" element={<EditarRol />} />
     <Route path="/editar-empleado/:correo" element={<EditarEmpleado />} />
-    <Route path="/gestion-cuotas" element={<GestionCuotas />} />
+    <Route path="/gestion-mensualidades" element={<GestionCuotas />} />
     <Route path="/gestion-eventos" element={<GestionEventos />} />
     <Route path="/crear-evento" element={<CrearEvento />} />
     <Route path="/editar-evento/:id" element={<CrearEvento />} />

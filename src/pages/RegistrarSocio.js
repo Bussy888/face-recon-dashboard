@@ -56,7 +56,7 @@ const RegistrarSocio = () => {
       };
       await crearSocioApi(socioConRostro);
       alert('Socio registrado exitosamente.');
-      navigate('/gestion-socios');
+      navigate('/gestion-estudiante');
     } catch (error) {
       console.error('Error registrando socio:', error);
       alert('Error registrando socio: ' + (error.response?.message || error.message));
@@ -145,7 +145,7 @@ const RegistrarSocio = () => {
               {/* Botones */}
               <Grid size={{ xs: 12 }} sx={{ mt: 2 }}>
                 <Box display="flex" justifyContent="space-between">
-                  <Button variant="contained" color="error" onClick={() => navigate('/gestion-socios')}>
+                  <Button variant="contained" color="error" onClick={() => navigate('/gestion-estudiante')}>
                     Cancelar
                   </Button>
                   <Button type="submit" variant="contained" color="success">

@@ -261,20 +261,20 @@ const datasets = tiposSocio.map((tipo) => ({
 
           <Paper elevation={4} sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
-              Pagos por Tipo de Estudiante
+              Pagos por Carrera del Estudiante
             </Typography>
             {pagosTipoSocio.length > 0 ? (
               <Box sx={{ width: '60%', maxWidth: 500, mx: 'auto' }}>
                 <Pie data={pagosTipoSocioChart} />
               </Box>
             ) : (
-              <Typography color="text.secondary">No hay datos de pagos por tipo de Estudiante.</Typography>
+              <Typography color="text.secondary">No hay datos de pagos por Carrera del Estudiante.</Typography>
             )}
           </Paper>
 
           <Paper elevation={4} sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
-              Pagos por Mes y Tipo de Estudiante
+              Pagos por Mes y Carrera del Estudiante
             </Typography>
             {pagosMes.length > 0 ? (
               <Line data={pagosMesChart} />

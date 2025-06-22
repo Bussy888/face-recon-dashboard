@@ -23,7 +23,7 @@ const permisosDefault = [
 ];
 const permisoLabels = {
   "gestion-socios": "Gestión de Estudiantes",
-  "gestion-cuotas": "Gestión de Cuotas",
+  "gestion-cuotas": "Gestión de Mensualidades",
   "gestion-eventos": "Gestión de Eventos",
   "gestion-roles": "Gestión de Roles",
 };
