@@ -99,6 +99,8 @@ const GestionCuotas = () => {
         await updateCuota(codigo_socio, mes, estado_pago, year);
       }
     }
+    
+    setShowSuccessModal(true);
     console.log("Estudiantes por paginar:", sociosPorPagina);
     // Después de los cambios, obtener los estudiantes actualizados con paginación
     const res = await sociosPorPaginar(year, page, sociosPorPagina);
@@ -115,11 +117,9 @@ const GestionCuotas = () => {
     setModifiedSocios({});
 
     // Mostrar el modal de éxito
-    setShowSuccessModal(true);
 
   } catch (error) {
     console.error("Error al guardar los cambios:", error);
-    alert('Hubo un error al guardar los cambios.');
   }
 };
 
