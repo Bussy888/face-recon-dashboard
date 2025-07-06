@@ -14,6 +14,7 @@ import {
   Modal,
   Typography,
   IconButton,
+  TextField,
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import {
@@ -23,8 +24,12 @@ import {
 
 const GestionSocios = () => {
   const [socios, setSocios] = useState([]);
+  const [filteredSocios, setFilteredSocios] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [socioToDelete, setSocioToDelete] = useState(null);
+  const [filterText, setFilterText] = useState('');
+  const [page, setPage] = useState(1);
+  const sociosPorPagina = 10;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,6 +40,7 @@ const GestionSocios = () => {
     try {
       const res = await fetchSociosApi();
       setSocios(res);
+      setFilteredSocios(res); // Al inicio, mostramos todos los socios
     } catch (error) {
       console.error("Error al obtener estudiantes:", error);
     }
@@ -73,6 +79,26 @@ const GestionSocios = () => {
     return fecha.toLocaleDateString('es-ES');
   };
 
+  // Filtrar socios en base al texto ingresado
+  const handleFilterChange = (e) => {
+    const text = e.target.value;
+    setFilterText(text);
+
+    const filtered = socios.filter(
+      (socio) =>
+        socio.codigo.toString().includes(text) ||
+        `${socio.nombre} ${socio.apellido}`.toLowerCase().includes(text.toLowerCase())
+    );
+
+    setFilteredSocios(filtered);
+    setPage(1); // Resetear la página a la primera al filtrar
+  };
+
+  const sociosPaginaActual = filteredSocios.slice(
+    (page - 1) * sociosPorPagina,
+    page * sociosPorPagina
+  );
+
   return (
     <Container maxWidth="lg" sx={{ padding: 4 }}>
       <Typography variant="h4" fontWeight={'bold'} align="center" gutterBottom>
@@ -89,6 +115,17 @@ const GestionSocios = () => {
         </Button>
       </Box>
 
+      {/* Campo de búsqueda en tiempo real */}
+      <Box display="flex" justifyContent="flex-end" mb={2}>
+        <TextField
+          label="Buscar por Código o Nombre"
+          variant="outlined"
+          fullWidth
+          value={filterText}
+          onChange={handleFilterChange}
+        />
+      </Box>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -102,7 +139,7 @@ const GestionSocios = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {socios.map((socio) => (
+            {sociosPaginaActual.map((socio) => (
               <TableRow key={socio.codigo}>
                 <TableCell>{socio.codigo}</TableCell>
                 <TableCell>{`${socio.nombre} ${socio.apellido}`}</TableCell>
@@ -128,6 +165,25 @@ const GestionSocios = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Paginación */}
+      <Box sx={{ mt: 2, textAlign: 'center' }}>
+        <Button
+          variant="outlined"
+          onClick={() => setPage(page > 1 ? page - 1 : 1)}
+          disabled={page === 1}
+        >
+          Anterior
+        </Button>
+        <span style={{ margin: '0 10px' }}>Página {page}</span>
+        <Button
+          variant="outlined"
+          onClick={() => setPage(page + 1)}
+          disabled={page * sociosPorPagina >= filteredSocios.length}
+        >
+          Siguiente
+        </Button>
+      </Box>
 
       {/* Modal de confirmación */}
       <Modal

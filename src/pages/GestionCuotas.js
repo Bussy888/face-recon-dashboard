@@ -17,12 +17,12 @@ import {
   Modal,
   Typography,
   Paper,
+  TextField
 } from '@mui/material';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { fetchCuotas, sociosPorPaginar, updateCuota } from '../services/cuotasService';
 
-// Define the months
 const meses = {
   'enero': 1, 'febrero': 2, 'marzo': 3, 'abril': 4, 'mayo': 5, 'junio': 6,
   'julio': 7, 'agosto': 8, 'septiembre': 9, 'octubre': 10, 'noviembre': 11, 'diciembre': 12
@@ -36,16 +36,25 @@ const GestionCuotas = () => {
   const [modifiedSocios, setModifiedSocios] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
   const sociosPorPagina = 10;
 
+  // Filtros
+  const [filterText, setFilterText] = useState('');
+
+  const filteredSocios = socios.filter(socio => {
+    const matchNombre = socio.nombre.toLowerCase().includes(filterText.toLowerCase());
+    const matchCodigo = socio.codigo.toString().includes(filterText);
+    return matchNombre || matchCodigo;
+  });
+
   const inicio = (page - 1) * sociosPorPagina;
-  const sociosPaginaActual = socios.slice(inicio, inicio + sociosPorPagina);
+  const sociosPaginaActual = filteredSocios.slice(inicio, inicio + sociosPorPagina);
 
   const validationSchema = Yup.object({
     year: Yup.number().required('Seleccione un año'),
   });
 
-  // Fetch socios data
   useEffect(() => {
     const fetchSocios = async () => {
       setLoading(true);
@@ -90,53 +99,39 @@ const GestionCuotas = () => {
   };
 
   const confirmSubmitChanges = async () => {
-  setShowConfirmModal(false);
-  try {
-    // Subir los cambios a la base de datos
-    for (let codigo_socio in modifiedSocios) {
-      for (let mes in modifiedSocios[codigo_socio]) {
-        const estado_pago = modifiedSocios[codigo_socio][mes];
-        await updateCuota(codigo_socio, mes, estado_pago, year);
+    setShowConfirmModal(false);
+    try {
+      for (let codigo_socio in modifiedSocios) {
+        for (let mes in modifiedSocios[codigo_socio]) {
+          const estado_pago = modifiedSocios[codigo_socio][mes];
+          await updateCuota(codigo_socio, mes, estado_pago, year);
+        }
       }
+
+      setShowSuccessModal(true);
+      const res = await sociosPorPaginar(year, page, sociosPorPagina);
+      const updatedSocios = res.cuotas.map(socio => {
+        const cuotasActualizadas = Object.keys(socio.cuotas).reduce((acc, mes) => {
+          acc[mes] = socio.cuotas[mes] === 1;
+          return acc;
+        }, {});
+        return { ...socio, cuotas: cuotasActualizadas };
+      });
+
+      setSocios(updatedSocios);
+      setModifiedSocios({});
+    } catch (error) {
+      console.error("Error al guardar los cambios:", error);
     }
-    
-    setShowSuccessModal(true);
-    console.log("Estudiantes por paginar:", sociosPorPagina);
-    // Después de los cambios, obtener los estudiantes actualizados con paginación
-    const res = await sociosPorPaginar(year, page, sociosPorPagina);
-    const updatedSocios = res.cuotas.map(socio => {
-      const cuotasActualizadas = Object.keys(socio.cuotas).reduce((acc, mes) => {
-        acc[mes] = socio.cuotas[mes] === 1;
-        return acc;
-      }, {});
-      return { ...socio, cuotas: cuotasActualizadas };
-    });
-
-    // Actualizar el estado de los estudiantes
-    setSocios(updatedSocios);
-    setModifiedSocios({});
-
-    // Mostrar el modal de éxito
-
-  } catch (error) {
-    console.error("Error al guardar los cambios:", error);
-  }
-};
-
-
-
+  };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Typography variant="h4" align="center" fontWeight={'bold'} gutterBottom>
-              Gestión de Mensualidades
-            </Typography>
-    
-      <Formik
-        initialValues={{ year }}
-        validationSchema={validationSchema}
-        onSubmit={() => {}}
-      >
+        Gestión de Mensualidades
+      </Typography>
+
+      <Formik initialValues={{ year }} validationSchema={validationSchema} onSubmit={() => { }}>
         {({ setFieldValue }) => (
           <Form>
             <FormControl fullWidth sx={{ mb: 2 }}>
@@ -159,7 +154,21 @@ const GestionCuotas = () => {
         )}
       </Formik>
 
-      {/* Table displaying socios */}
+      {/* Filtro de búsqueda en tiempo real */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <TextField
+          fullWidth
+          label="Buscar por Código o Nombre"
+          variant="outlined"
+          value={filterText}
+          onChange={(e) => {
+            setFilterText(e.target.value); // Actualiza el filtro a medida que el usuario escribe
+            setPage(1); // Resetea la página cuando se hace una nueva búsqueda
+          }}
+        />
+      </Box>
+
+      {/* Tabla */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -196,7 +205,7 @@ const GestionCuotas = () => {
         </Table>
       </TableContainer>
 
-      {/* Submit Changes Button */}
+      {/* Botón de guardar */}
       <Box sx={{ mt: 2, textAlign: 'center' }}>
         <Button
           variant="contained"
@@ -208,7 +217,7 @@ const GestionCuotas = () => {
         </Button>
       </Box>
 
-      {/* Pagination Buttons */}
+      {/* Paginación */}
       <Box sx={{ mt: 2, textAlign: 'center' }}>
         <Button
           variant="outlined"
@@ -227,7 +236,7 @@ const GestionCuotas = () => {
         </Button>
       </Box>
 
-      {/* Confirm Modal */}
+      {/* Modal de Confirmación */}
       <Modal
         open={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
@@ -244,7 +253,7 @@ const GestionCuotas = () => {
         </Box>
       </Modal>
 
-      {/* Success Modal */}
+      {/* Modal de Éxito */}
       <Modal
         open={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}

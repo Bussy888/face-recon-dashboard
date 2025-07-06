@@ -177,25 +177,32 @@ const datasets = tiposSocio.map((tipo) => ({
 };
 
   // Gráfico pagos por mes y tipo de socio
-  const pagosMesChart = {
-    labels: Object.keys(pagosMesPorTipoSocio).sort((a, b) => {
-      const [mesA, añoA] = a.split('/').map(Number);
-      const [mesB, añoB] = b.split('/').map(Number);
-      return añoA !== añoB ? añoA - añoB : mesA - mesB;
-    }),
-    datasets: Object.keys(pagosMesPorTipoSocio[Object.keys(pagosMesPorTipoSocio)[0]] || {}).map((tipo_socio) => ({
-      label: tipo_socio,
-      data: Object.keys(pagosMesPorTipoSocio)
-        .sort((a, b) => {
-          const [mesA, añoA] = a.split('/').map(Number);
-          const [mesB, añoB] = b.split('/').map(Number);
-          return añoA !== añoB ? añoA - añoB : mesA - mesB;
-        })
-        .map((mesAño) => pagosMesPorTipoSocio[mesAño][tipo_socio] || 0),
-      borderColor: getColorForTipoSocio(tipo_socio),
-      backgroundColor: 'transparent',
-    })),
-  };
+  // Obtener todos los tipo_socio únicos de todos los meses
+const allTiposSocio = [
+  ...new Set(
+    Object.values(pagosMesPorTipoSocio).flatMap(mesData => Object.keys(mesData))
+  ),
+];
+
+const pagosMesChart = {
+  labels: Object.keys(pagosMesPorTipoSocio).sort((a, b) => {
+    const [mesA, añoA] = a.split('/').map(Number);
+    const [mesB, añoB] = b.split('/').map(Number);
+    return añoA !== añoB ? añoA - añoB : mesA - mesB;
+  }),
+  datasets: allTiposSocio.map((tipo_socio) => ({
+    label: tipo_socio,
+    data: Object.keys(pagosMesPorTipoSocio)
+      .sort((a, b) => {
+        const [mesA, añoA] = a.split('/').map(Number);
+        const [mesB, añoB] = b.split('/').map(Number);
+        return añoA !== añoB ? añoA - añoB : mesA - mesB;
+      })
+      .map((mesAño) => pagosMesPorTipoSocio[mesAño]?.[tipo_socio] || 0),
+    borderColor: getColorForTipoSocio(tipo_socio),
+    backgroundColor: 'transparent',
+  })),
+};
 
   // Gráfico pagos por tipo socio (categoría)
   const pagosTipoSocioChart = {
