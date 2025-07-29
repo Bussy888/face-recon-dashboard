@@ -7,6 +7,6 @@ export const obtenerPermisos = async () => {
 };
 
 export const obtenerPermisosPorRol = async (rolId) => {
-  const res = await jsonServerInstance.get(`/permisos/${rolId}`);
+  const res = await jsonServerInstance.get(`/permisos/${rolId}/permisos`);
   return res.data.permisos;
 };

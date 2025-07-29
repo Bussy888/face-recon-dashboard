@@ -1,6 +1,7 @@
 import  {  useRef, useState } from 'react';
 import {
   crearSocio as crearSocioApi,
+  obtenerTiposSocio,
 } from '../services/socioService';
 import { useNavigate } from 'react-router-dom';
 import { Formik, Field, Form } from 'formik';
@@ -18,18 +19,25 @@ import {
   Box,
   FormHelperText,
 } from '@mui/material';
+import { useEffect } from 'react';
 
 const RegistrarSocio = () => {
   const navigate = useNavigate();
   const canvasRef = useRef(null);
   const [rostroDescriptor, setRostroDescriptor] = useState(null);
 
-  const tiposSocio = [
-    'Negocios Digitales',
-    'Desarrollo Fullstack',
-    'Analitica Digital',
-  ];
-
+const [tiposSocio, setTiposSocio] = useState([]);
+  useEffect(() => {
+  const fetchTipos = async () => {
+    try {
+      const data = await obtenerTiposSocio();
+      setTiposSocio(data.nombre_tipo ? [data] : data); // Asegura que sea un array
+    } catch (error) {
+      console.error('Error al cargar tipos de socio:', error);
+    }
+  };
+  fetchTipos();
+}, []);
   const validationSchema = Yup.object({
     codigo: Yup.string().required('El carnet de identidad es obligatorio'),
     nombre: Yup.string().required('El nombre es obligatorio'),
@@ -128,7 +136,9 @@ const RegistrarSocio = () => {
                   >
                     <MenuItem value=""><em>Seleccione una carrera</em></MenuItem>
                     {tiposSocio.map((tipo, index) => (
-                      <MenuItem key={index} value={tipo}>{tipo}</MenuItem>
+                      <MenuItem key={tipo.id_tipo_socio} value={tipo.id_tipo_socio}>
+  {tipo.nombre_tipo}
+</MenuItem>
                     ))}
                   </Select>
                   <FormHelperText>{touched.tipo_socio && errors.tipo_socio}</FormHelperText>

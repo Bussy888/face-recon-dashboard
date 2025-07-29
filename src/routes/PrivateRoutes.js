@@ -15,6 +15,7 @@ import RegistrarSocio from '../pages/RegistrarSocio';
 import EditarSocio from '../pages/EditarSocio';
 
 import { useUserStore } from '../store/useUserStore';
+import GestionAsistencia from '../pages/GestionAsistencia';
 
 const RequireAuth = () => {
   const user = useUserStore((state) => state.user);
@@ -42,6 +43,7 @@ const PrivateRoutes = [
     <Route path="/gestion-estudiante" element={<GestionSocios />} />
     <Route path="/registrar-estudiante" element={<RegistrarSocio />} />
     <Route path="/editar-estudiante/:codigo" element={<EditarSocio />} />
+    <Route path="/gestion-asistencia" element={<GestionAsistencia/>} />
   </Route>,
 ];
 

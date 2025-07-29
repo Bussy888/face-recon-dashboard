@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   cargarSocio as cargarSocioApi,
   actualizarSocio as actualizarSocioApi,
+  obtenerTiposSocio,
 } from '../services/socioService';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Field, Form } from 'formik';
@@ -20,13 +21,7 @@ import {
 } from '@mui/material';
 import CapturaRostro from '../components/CapturaRostro';
 
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * Página para editar un socio
- * 
- * @returns Componente JSX
- */
-/*******  58b1a933-a5fa-4d0f-90a6-1f53ad4ca7c3  *******/const EditarSocio = () => {
+const EditarSocio = () => {
   const { codigo } = useParams();
   const navigate = useNavigate();
 
@@ -40,12 +35,7 @@ import CapturaRostro from '../components/CapturaRostro';
   });
 
   const [rostroDescriptor, setRostroDescriptor] = useState(null);
-
-  const tiposSocio = [
-    'Negocios Digitales',
-    'Desarrollo Fullstack',
-    'Analitica Digital',
-  ];
+  const [tiposSocio, setTiposSocio] = useState([]);
 
   const validationSchema = Yup.object({
     nombre: Yup.string().required('El nombre es obligatorio'),
@@ -64,9 +54,19 @@ import CapturaRostro from '../components/CapturaRostro';
       setSocio({
         ...response,
         fecha_nacimiento: fechaFormateada,
+        tipo_socio: response.tipo_socio?.id_tipo_socio || '', // Asegura que el valor coincida con el select
       });
     } catch (error) {
       console.error('Error al cargar los datos del socio:', error);
+    }
+  };
+
+  const cargarTiposSocio = async () => {
+    try {
+      const data = await obtenerTiposSocio();
+      setTiposSocio(data.nombre_tipo ? [data] : data); // asegúrate que sea un array
+    } catch (error) {
+      console.error('Error al cargar tipos de socio:', error);
     }
   };
 
@@ -87,6 +87,7 @@ import CapturaRostro from '../components/CapturaRostro';
 
   useEffect(() => {
     cargarSocio();
+    cargarTiposSocio();
   }, [codigo]);
 
   return (
@@ -168,6 +169,7 @@ import CapturaRostro from '../components/CapturaRostro';
                   required
                 />
               </Grid>
+
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl
                   fullWidth
@@ -182,8 +184,10 @@ import CapturaRostro from '../components/CapturaRostro';
                     label="Carrera"
                   >
                     <MenuItem value=""><em>Seleccione una carrera</em></MenuItem>
-                    {tiposSocio.map((tipo, index) => (
-                      <MenuItem key={index} value={tipo}>{tipo}</MenuItem>
+                    {tiposSocio.map((tipo) => (
+                      <MenuItem key={tipo.id_tipo_socio} value={tipo.id_tipo_socio}>
+                        {tipo.nombre_tipo}
+                      </MenuItem>
                     ))}
                   </Select>
                   <FormHelperText>{touched.tipo_socio && errors.tipo_socio}</FormHelperText>

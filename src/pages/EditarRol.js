@@ -22,12 +22,14 @@ const permisosDefault = [
   "gestion-cuotas",
   "gestion-eventos",
   "gestion-roles",
+  "gestion-asistencia",
 ];
 const permisoLabels = {
   "gestion-socios": "Gestión de Estudiantes",
   "gestion-cuotas": "Gestión de Mensualidades",
   "gestion-eventos": "Gestión de Eventos",
   "gestion-roles": "Gestión de Roles",
+  "gestion-asistencia": "Gestión de Asistencia"
 };
 
 
