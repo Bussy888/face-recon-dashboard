@@ -21,7 +21,10 @@ import {
   useTheme,
   useMediaQuery,
   Paper,
+  Snackbar,
+  IconButton,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 import {
   cargarVisitas as cargarVisitasApi,
@@ -29,7 +32,7 @@ import {
   cargarPagosMes as cargarPagosMesApi,
   cargarPagosTipoSocio as cargarPagosTipoSocioApi,
   exportarExcel as exportarExcelApi,
-  exportarPagosExcel as exportarPagosExcelApi
+  exportarPagosExcel as exportarPagosExcelApi,
 } from '../services/reporteAccesoService';
 
 // Registrar escalas y elementos para ChartJS
@@ -46,18 +49,33 @@ ChartJS.register(
 
 const Home = () => {
   const [visitas, setVisitas] = useState([]);
-  // Ahora ingresosHoy es un arreglo con objetos { tipo_socio, cantidad }
   const [ingresosHoy, setIngresosHoy] = useState([]);
   const [pagosMes, setPagosMes] = useState([]);
   const [pagosTipoSocio, setPagosTipoSocio] = useState([]);
   const [pagosMesPorTipoSocio, setPagosMesPorTipoSocio] = useState({});
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
 
   const formatFecha = (fecha) => {
     if (!fecha || !isValid(new Date(fecha))) return '';
     return format(new Date(fecha), 'dd/MM/yyyy');
   };
+
   const getColorForTipoSocio = (tipo_socio) => {
     switch (tipo_socio) {
       case 'Negocios Digitales':
@@ -70,19 +88,20 @@ const Home = () => {
         return '#000000';
     }
   };
-const fechas = [...new Set(visitas.map(v => formatFecha(v.periodo)))];
-const tiposSocio = [...new Set(visitas.map(v => v.carrera))];
-const datasets = tiposSocio.map((tipo) => ({
-  label: tipo,
-  borderColor: getColorForTipoSocio(tipo),
-  backgroundColor: 'transparent',
-  data: fechas.map(fecha => {
-    const visita = visitas.find(
-      (v) => formatFecha(v.periodo) === fecha && v.carrera === tipo
-    );
-    return visita ? visita.ingresos_socios : 0;
-  }),
-}));
+
+  const fechas = [...new Set(visitas.map(v => formatFecha(v.periodo)))];
+  const tiposSocio = [...new Set(visitas.map(v => v.carrera))];
+  const datasets = tiposSocio.map((tipo) => ({
+    label: tipo,
+    borderColor: getColorForTipoSocio(tipo),
+    backgroundColor: 'transparent',
+    data: fechas.map(fecha => {
+      const visita = visitas.find(
+        (v) => formatFecha(v.periodo) === fecha && v.carrera === tipo
+      );
+      return visita ? visita.ingresos_socios : 0;
+    }),
+  }));
 
   const cargarVisitas = async () => {
     try {
@@ -90,26 +109,24 @@ const datasets = tiposSocio.map((tipo) => ({
       setVisitas(res);
     } catch (error) {
       console.error('Error al cargar visitas:', error);
-      alert('Hubo un error al cargar los datos de visitas. Por favor, inténtalo de nuevo.');
+      showSnackbar('Error al cargar los datos de visitas.', 'error');
     }
   };
 
-  // Aquí asumimos que la API retorna un arreglo con ingresos por tipo de socio [{ tipo_socio, cantidad }]
   const cargarIngresosHoy = async () => {
-  try {
-    const res = await cargarIngresosHoyApi();
-    console.log('ingresosHoy API response:', res);
-    if (Array.isArray(res)) {
-      setIngresosHoy(res);
-    } else {
-      setIngresosHoy([]);
-      console.warn('Respuesta inesperada en ingresosHoy:', res);
+    try {
+      const res = await cargarIngresosHoyApi();
+      if (Array.isArray(res)) {
+        setIngresosHoy(res);
+      } else {
+        setIngresosHoy([]);
+        showSnackbar('Formato inesperado de ingresos de hoy.', 'error');
+      }
+    } catch (error) {
+      console.error('Error al cargar los ingresos de hoy:', error);
+      showSnackbar('Error al cargar los ingresos de hoy.', 'error');
     }
-  } catch (error) {
-    console.error('Error al cargar los ingresos de hoy:', error);
-  }
-};
-
+  };
 
   const cargarPagosMes = async () => {
     try {
@@ -127,6 +144,7 @@ const datasets = tiposSocio.map((tipo) => ({
       setPagosMesPorTipoSocio(pagosPorTipo);
     } catch (error) {
       console.error('Error al cargar pagos por mes:', error);
+      showSnackbar('Error al cargar los pagos del mes.', 'error');
     }
   };
 
@@ -136,15 +154,28 @@ const datasets = tiposSocio.map((tipo) => ({
       setPagosTipoSocio(res);
     } catch (error) {
       console.error('Error al cargar pagos por tipo de socio:', error);
+      showSnackbar('Error al cargar los pagos por carrera.', 'error');
     }
   };
 
-  const exportarExcel = () => {
-    exportarExcelApi();
+  const exportarExcel = async () => {
+    try {
+      await exportarExcelApi();
+      showSnackbar('Excel de ingresos exportado exitosamente');
+    } catch (error) {
+      console.error('Error al exportar ingresos:', error);
+      showSnackbar('Error al exportar Excel de ingresos', 'error');
+    }
   };
 
-  const exportarPagosExcel = () => {
-    exportarPagosExcelApi();
+  const exportarPagosExcel = async () => {
+    try {
+      await exportarPagosExcelApi();
+      showSnackbar('Excel de pagos exportado exitosamente');
+    } catch (error) {
+      console.error('Error al exportar pagos:', error);
+      showSnackbar('Error al exportar Excel de pagos', 'error');
+    }
   };
 
   useEffect(() => {
@@ -154,57 +185,49 @@ const datasets = tiposSocio.map((tipo) => ({
     cargarPagosTipoSocio();
   }, []);
 
-
-  // Para gráfico de ingresos hoy por tipo de socio
   const pieChartData = {
-  labels: Array.isArray(ingresosHoy) ? ingresosHoy.map(i => i.carrera) : [],
-  datasets: [
-    {
-      data: Array.isArray(ingresosHoy) ? ingresosHoy.map(i => i.ingresos_socios) : [],
-      backgroundColor: Array.isArray(ingresosHoy) ? ingresosHoy.map(i => getColorForTipoSocio(i.carrera)) : [],
-      borderColor: '#ffffff',
-      borderWidth: 1,
-    },
-  ],
-};
+    labels: ingresosHoy.map(i => i.carrera),
+    datasets: [
+      {
+        data: ingresosHoy.map(i => i.ingresos_socios),
+        backgroundColor: ingresosHoy.map(i => getColorForTipoSocio(i.carrera)),
+        borderColor: '#ffffff',
+        borderWidth: 1,
+      },
+    ],
+  };
 
+  const chartData = {
+    labels: fechas,
+    datasets: datasets,
+  };
 
+  const allTiposSocio = [
+    ...new Set(
+      Object.values(pagosMesPorTipoSocio).flatMap(mesData => Object.keys(mesData))
+    ),
+  ];
 
-  // Para gráfico de visitas por día (si quieres conservarlo)
- const chartData = {
-  labels: fechas,
-  datasets: datasets,
-};
+  const pagosMesChart = {
+    labels: Object.keys(pagosMesPorTipoSocio).sort((a, b) => {
+      const [mesA, añoA] = a.split('/').map(Number);
+      const [mesB, añoB] = b.split('/').map(Number);
+      return añoA !== añoB ? añoA - añoB : mesA - mesB;
+    }),
+    datasets: allTiposSocio.map((tipo_socio) => ({
+      label: tipo_socio,
+      data: Object.keys(pagosMesPorTipoSocio)
+        .sort((a, b) => {
+          const [mesA, añoA] = a.split('/').map(Number);
+          const [mesB, añoB] = b.split('/').map(Number);
+          return añoA !== añoB ? añoA - añoB : mesA - mesB;
+        })
+        .map((mesAño) => pagosMesPorTipoSocio[mesAño]?.[tipo_socio] || 0),
+      borderColor: getColorForTipoSocio(tipo_socio),
+      backgroundColor: 'transparent',
+    })),
+  };
 
-  // Gráfico pagos por mes y tipo de socio
-  // Obtener todos los tipo_socio únicos de todos los meses
-const allTiposSocio = [
-  ...new Set(
-    Object.values(pagosMesPorTipoSocio).flatMap(mesData => Object.keys(mesData))
-  ),
-];
-
-const pagosMesChart = {
-  labels: Object.keys(pagosMesPorTipoSocio).sort((a, b) => {
-    const [mesA, añoA] = a.split('/').map(Number);
-    const [mesB, añoB] = b.split('/').map(Number);
-    return añoA !== añoB ? añoA - añoB : mesA - mesB;
-  }),
-  datasets: allTiposSocio.map((tipo_socio) => ({
-    label: tipo_socio,
-    data: Object.keys(pagosMesPorTipoSocio)
-      .sort((a, b) => {
-        const [mesA, añoA] = a.split('/').map(Number);
-        const [mesB, añoB] = b.split('/').map(Number);
-        return añoA !== añoB ? añoA - añoB : mesA - mesB;
-      })
-      .map((mesAño) => pagosMesPorTipoSocio[mesAño]?.[tipo_socio] || 0),
-    borderColor: getColorForTipoSocio(tipo_socio),
-    backgroundColor: 'transparent',
-  })),
-};
-
-  // Gráfico pagos por tipo socio (categoría)
   const pagosTipoSocioChart = {
     labels: pagosTipoSocio.map((p) => p.tipo_socio),
     datasets: [
@@ -218,24 +241,22 @@ const pagosMesChart = {
   return (
     <Box sx={{ p: 3, maxWidth: 1300, mx: 'auto' }}>
       <Grid container spacing={3}>
-        {/* Columna Izquierda: Ingresos por Tipo Socio */}
         <Grid size={{ xs: 12, sm: 6 }} display="flex" flexDirection="column" gap={3}>
           <Paper elevation={4} sx={{ p: 2 }}>
             <Typography variant="h5" gutterBottom>
-              Historial de Ingresos Registrados 
+              Historial de Ingresos Registrados
             </Typography>
             <Button variant="contained" color="primary" onClick={exportarExcel}>
               📥 Exportar Ingresos Excel
             </Button>
           </Paper>
           <Paper elevation={4} sx={{ p: 2 }}>
-            <Typography variant="h6"  gutterBottom>
-                    Distribución de Ingresos de Hoy
-                  </Typography>
+            <Typography variant="h6" gutterBottom>
+              Distribución de Ingresos de Hoy
+            </Typography>
             {ingresosHoy.length > 0 ? (
               <Box sx={{ width: '60%', maxWidth: 500, mx: 'auto' }}>
-                  
-                  <Pie data={pieChartData}  />
+                <Pie data={pieChartData} />
               </Box>
             ) : (
               <Typography color="text.secondary">
@@ -243,7 +264,6 @@ const pagosMesChart = {
               </Typography>
             )}
           </Paper>
-
           <Paper elevation={4} sx={{ p: 2 }}>
             <Typography variant="h5" gutterBottom>
               Gráfico de Ingresos por Día (Visitas)
@@ -255,7 +275,6 @@ const pagosMesChart = {
           </Paper>
         </Grid>
 
-        {/* Columna Derecha: Pagos */}
         <Grid size={{ xs: 12, sm: 6 }} display="flex" flexDirection="column" gap={3}>
           <Paper elevation={4} sx={{ p: 2 }}>
             <Typography variant="h5" gutterBottom>
@@ -265,7 +284,6 @@ const pagosMesChart = {
               📥 Exportar Pagos Excel
             </Button>
           </Paper>
-
           <Paper elevation={4} sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
               Pagos por Carrera del Estudiante
@@ -278,7 +296,6 @@ const pagosMesChart = {
               <Typography color="text.secondary">No hay datos de pagos por Carrera del Estudiante.</Typography>
             )}
           </Paper>
-
           <Paper elevation={4} sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
               Pagos por Mes y Carrera del Estudiante
@@ -291,6 +308,25 @@ const pagosMesChart = {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Snackbar de notificaciones */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+        action={
+          <IconButton size="small" color="inherit" onClick={handleSnackbarClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        }
+        ContentProps={{
+          style: {
+            backgroundColor: snackbarSeverity === 'error' ? '#f44336' : '#4caf50',
+            color: 'white',
+          },
+        }}
+      />
     </Box>
   );
 };

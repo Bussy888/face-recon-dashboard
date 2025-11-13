@@ -1,14 +1,27 @@
 import React, { useRef, useState, useEffect } from 'react';
 import * as faceapi from 'face-api.js';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, Snackbar, IconButton } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 
 const CapturaRostro = ({ onCapture }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [imageSrc, setImageSrc] = useState(null);
-  const [pendingStart, setPendingStart] = useState(false); // para esperar al render
-const [streamRef, setStreamRef] = useState(null);
+  const [pendingStart, setPendingStart] = useState(false);
+  const [streamRef, setStreamRef] = useState(null);
+
+  // Snackbar states
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success' o 'error'
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
   const detenerCamara = () => {
     const stream = videoRef.current?.srcObject;
     if (stream) {
@@ -17,61 +30,51 @@ const [streamRef, setStreamRef] = useState(null);
     }
   };
 
-useEffect(() => {
-  const loadModels = async () => {
-    try {
-      await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-      await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-      await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-    } catch (err) {
-      console.error('Error cargando modelos:', err);
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+        await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+        await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+      } catch (err) {
+        console.error('Error cargando modelos:', err);
+        showSnackbar('Error al cargar los modelos de reconocimiento facial.', 'error');
+      }
+    };
+
+    loadModels();
+  }, []);
+
+  useEffect(() => {
+    if (isCameraActive && videoRef.current && pendingStart) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          videoRef.current.srcObject = stream;
+          setStreamRef(stream);
+          setPendingStart(false);
+        })
+        .catch((err) => {
+          console.error('No se pudo acceder a la cámara', err);
+          showSnackbar('No se pudo acceder a la cámara.', 'error');
+          setIsCameraActive(false);
+          setPendingStart(false);
+        });
     }
-  };
+  }, [isCameraActive, pendingStart]);
 
-  loadModels();
-
-}, []);
-
-
-
-
-  // Activar cámara (cuando el video esté renderizado)
- useEffect(() => {
-  if (isCameraActive && videoRef.current && pendingStart) {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then((stream) => {
-        videoRef.current.srcObject = stream;
-        setStreamRef(stream); // Guardar referencia para limpieza futura
-        setPendingStart(false);
-      })
-      .catch((err) => {
-        console.error('No se pudo acceder a la cámara', err);
-        alert('No se pudo acceder a la cámara.');
-        setIsCameraActive(false);
-        setPendingStart(false);
-      });
-  }
-}, [isCameraActive, pendingStart]);
-
-
-useEffect(() => {
-  return () => {
-    console.log('Cleanup ejecutado');
-    if (streamRef instanceof MediaStream) {
-      streamRef.getTracks().forEach((track) => track.stop());
-      console.log('Cámara detenida correctamente');
-    } else {
-      console.log('streamRef no era MediaStream:', streamRef);
-    }
-  };
-}, [streamRef]);
+  useEffect(() => {
+    return () => {
+      if (streamRef instanceof MediaStream) {
+        streamRef.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [streamRef]);
 
   const iniciarCamara = () => {
     setIsCameraActive(true);
-    setPendingStart(true); // esperar que el video se monte
+    setPendingStart(true);
   };
 
-  
   const capturarRostro = async () => {
     const detection = await faceapi
       .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
@@ -89,16 +92,21 @@ useEffect(() => {
       setIsCameraActive(false);
 
       const descriptor = Array.from(detection.descriptor);
-      
       onCapture({ image, descriptor });
+
+      showSnackbar('Rostro capturado con éxito.', 'success');
     } else {
-      alert('No se detectó ningún rostro.');
+      showSnackbar('No se detectó ningún rostro.', 'error');
     }
   };
 
   const volverACapturar = () => {
     setImageSrc(null);
-    iniciarCamara(); // esto activará cámara y esperará render con useEffect
+    iniciarCamara();
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -127,7 +135,26 @@ useEffect(() => {
           </Button>
         </>
       )}
+
       <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+        action={
+          <IconButton size="small" color="inherit" onClick={handleSnackbarClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        }
+        ContentProps={{
+          style: {
+            backgroundColor: snackbarSeverity === 'error' ? '#f44336' : '#4caf50',
+            color: 'white',
+          },
+        }}
+      />
     </Box>
   );
 };

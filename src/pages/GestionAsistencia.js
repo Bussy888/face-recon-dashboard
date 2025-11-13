@@ -16,8 +16,11 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Grid
+  Grid,
+  Snackbar,
+  IconButton,
 } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { fetchUltimasEntradas, getSocioPorCodigo, registrarEntradaManual } from '../services/socioService';
@@ -27,6 +30,9 @@ const GestionAsistencia = () => {
   const [socioEncontrado, setSocioEncontrado] = useState(null);
   const [codigoBuscado, setCodigoBuscado] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // success | error
 
   useEffect(() => {
     obtenerUltimasEntradas();
@@ -38,6 +44,9 @@ const GestionAsistencia = () => {
       setUltimasEntradas(data);
     } catch (error) {
       console.error('Error al obtener entradas:', error);
+      setSnackbarMessage('Error al cargar entradas');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
   };
 
@@ -55,14 +64,18 @@ const GestionAsistencia = () => {
     onSubmit: async (values, { resetForm }) => {
       try {
         await registrarEntradaManual(values);
-        alert('Entrada registrada correctamente');
+        setSnackbarMessage('Entrada registrada correctamente');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
         resetForm();
         setSocioEncontrado(null);
         setOpenDialog(false);
         obtenerUltimasEntradas();
       } catch (error) {
         console.error('Error al registrar entrada:', error);
-        alert('Hubo un error al registrar la entrada');
+        setSnackbarMessage('Hubo un error al registrar la entrada');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
       }
     },
   });
@@ -88,20 +101,22 @@ const GestionAsistencia = () => {
     }
   };
 
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
   return (
     <Container maxWidth="md" sx={{ padding: 4 }}>
       <Typography variant="h4" align="center" fontWeight="bold" gutterBottom>
         Gestión de Asistencia
       </Typography>
 
-      {/* Botón para abrir el formulario en diálogo */}
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <Button variant="contained" onClick={() => setOpenDialog(true)}>
           Añadir entrada manual
         </Button>
       </Box>
 
-      {/* Tabla con últimas 10 entradas */}
       <Typography variant="h6" gutterBottom>
         Últimas 10 Entradas Registradas
       </Typography>
@@ -129,12 +144,10 @@ const GestionAsistencia = () => {
         </Table>
       </TableContainer>
 
-      {/* Diálogo con el formulario */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="sm">
         <DialogTitle>Registrar Entrada Manual</DialogTitle>
         <DialogContent>
           <Box component="form" onSubmit={formik.handleSubmit}>
-
             <Grid container spacing={2} mt={1}>
               <Grid size={{ xs: 12 }}>
                 <TextField
@@ -149,7 +162,7 @@ const GestionAsistencia = () => {
               </Grid>
 
               {socioEncontrado && (
-                <Grid size={{ xs: 12 }} >
+                <Grid size={{ xs: 12 }}>
                   <Box p={2} border="1px solid #ccc" borderRadius={2}>
                     <Typography><strong>Nombre:</strong> {socioEncontrado.nombre} {socioEncontrado.apellido}</Typography>
                     <Typography><strong>Carrera:</strong> {socioEncontrado.tipo_socio}</Typography>
@@ -172,7 +185,7 @@ const GestionAsistencia = () => {
                 />
               </Grid>
 
-              <Grid size={{  xs: 12, sm: 6  }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   type="time"
                   label="Hora"
@@ -190,19 +203,36 @@ const GestionAsistencia = () => {
         </DialogContent>
         <DialogActions>
           <Button
-  variant="outline"
-  onClick={() => {
-    formik.resetForm();
-    setOpenDialog(false); // cierra el modal
-       // limpia todos los campos
-  }}
->
-  Cancelar
-</Button>
-
+            variant="outlined"
+            onClick={() => {
+              formik.resetForm();
+              setOpenDialog(false);
+            }}
+          >
+            Cancelar
+          </Button>
           <Button onClick={formik.handleSubmit} variant="contained">Registrar</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+        action={
+          <IconButton size="small" color="inherit" onClick={handleSnackbarClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        }
+        ContentProps={{
+          style: {
+            backgroundColor: snackbarSeverity === 'error' ? '#f44336' : '#4caf50',
+            color: 'white',
+          },
+        }}
+      />
     </Container>
   );
 };

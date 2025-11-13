@@ -15,8 +15,9 @@ import {
   Typography,
   IconButton,
   TextField,
+  Snackbar,
 } from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
+import { Edit, Delete, Close as CloseIcon } from '@mui/icons-material';
 import {
   fetchSocios as fetchSociosApi,
   eliminarSocio as eliminarSocioApi,
@@ -32,6 +33,11 @@ const GestionSocios = () => {
   const sociosPorPagina = 10;
   const navigate = useNavigate();
 
+  // Snackbar
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // "success" o "error"
+
   useEffect(() => {
     fetchSocios();
   }, []);
@@ -40,20 +46,27 @@ const GestionSocios = () => {
     try {
       const res = await fetchSociosApi();
       setSocios(res);
-      setFilteredSocios(res); // Al inicio, mostramos todos los socios
+      setFilteredSocios(res);
     } catch (error) {
       console.error("Error al obtener estudiantes:", error);
+      setSnackbarMessage('Error al cargar estudiantes');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
   };
 
   const eliminarSocio = async (codigo) => {
     try {
-      console.log("Eliminando socio con código:", codigo);
       await eliminarSocioApi(codigo);
+      setSnackbarMessage('Estudiante eliminado exitosamente');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
       fetchSocios();
     } catch (error) {
       console.error("Error al eliminar socio:", error);
-      alert("Ocurrió un error al eliminar el socio.");
+      setSnackbarMessage('Error al eliminar el estudiante');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
   };
 
@@ -73,13 +86,16 @@ const GestionSocios = () => {
     setSocioToDelete(null);
   };
 
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
   const formatFecha = (fechaISO) => {
     if (!fechaISO) return '';
     const fecha = new Date(fechaISO);
     return fecha.toLocaleDateString('es-ES');
   };
 
-  // Filtrar socios en base al texto ingresado
   const handleFilterChange = (e) => {
     const text = e.target.value;
     setFilterText(text);
@@ -91,7 +107,7 @@ const GestionSocios = () => {
     );
 
     setFilteredSocios(filtered);
-    setPage(1); // Resetear la página a la primera al filtrar
+    setPage(1);
   };
 
   const sociosPaginaActual = filteredSocios.slice(
@@ -115,7 +131,6 @@ const GestionSocios = () => {
         </Button>
       </Box>
 
-      {/* Campo de búsqueda en tiempo real */}
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <TextField
           label="Buscar por Código o Nombre"
@@ -166,7 +181,6 @@ const GestionSocios = () => {
         </Table>
       </TableContainer>
 
-      {/* Paginación */}
       <Box sx={{ mt: 2, textAlign: 'center' }}>
         <Button
           variant="outlined"
@@ -185,15 +199,10 @@ const GestionSocios = () => {
         </Button>
       </Box>
 
-      {/* Modal de confirmación */}
       <Modal
         open={showPopup}
         onClose={handleCancelDelete}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       >
         <Box
           sx={{
@@ -218,6 +227,25 @@ const GestionSocios = () => {
           </Box>
         </Box>
       </Modal>
+
+      {/* Snackbar para notificaciones */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+        action={
+          <IconButton size="small" color="inherit" onClick={handleSnackbarClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        }
+        ContentProps={{
+          style: {
+            backgroundColor: snackbarSeverity === 'error' ? '#f44336' : '#4caf50',
+            color: 'white',
+          },
+        }}
+      />
     </Container>
   );
 };

@@ -78,7 +78,7 @@ const Login = () => {
           src="/logo-transmite-azul.png"
           alt="Logo"
           style={{
-            width: isSmallScreen ? '60%' : '70%',
+            width: isSmallScreen ? '50%' : '60%',
             marginBottom: 24,
             userSelect: 'none',
           }}

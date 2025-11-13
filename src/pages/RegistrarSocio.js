@@ -1,4 +1,4 @@
-import  {  useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   crearSocio as crearSocioApi,
   obtenerTiposSocio,
@@ -6,7 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { Formik, Field, Form } from 'formik';
 import * as Yup from 'yup';
-import CapturaRostro from '../components/CapturaRostro'; // importa correctamente
+import CapturaRostro from '../components/CapturaRostro';
 import {
   Typography,
   TextField,
@@ -18,26 +18,36 @@ import {
   InputLabel,
   Box,
   FormHelperText,
+  Snackbar,
+  IconButton,
 } from '@mui/material';
-import { useEffect } from 'react';
+import { Close as CloseIcon } from '@mui/icons-material';
 
 const RegistrarSocio = () => {
   const navigate = useNavigate();
   const canvasRef = useRef(null);
   const [rostroDescriptor, setRostroDescriptor] = useState(null);
+  const [tiposSocio, setTiposSocio] = useState([]);
 
-const [tiposSocio, setTiposSocio] = useState([]);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // "success" | "error"
+
   useEffect(() => {
-  const fetchTipos = async () => {
-    try {
-      const data = await obtenerTiposSocio();
-      setTiposSocio(data.nombre_tipo ? [data] : data); // Asegura que sea un array
-    } catch (error) {
-      console.error('Error al cargar tipos de socio:', error);
-    }
-  };
-  fetchTipos();
-}, []);
+    const fetchTipos = async () => {
+      try {
+        const data = await obtenerTiposSocio();
+        setTiposSocio(data.nombre_tipo ? [data] : data);
+      } catch (error) {
+        console.error('Error al cargar tipos de socio:', error);
+        setSnackbarMessage('Error al cargar tipos de socio');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+    };
+    fetchTipos();
+  }, []);
+
   const validationSchema = Yup.object({
     codigo: Yup.string().required('El carnet de identidad es obligatorio'),
     nombre: Yup.string().required('El nombre es obligatorio'),
@@ -47,13 +57,11 @@ const [tiposSocio, setTiposSocio] = useState([]);
     tipo_socio: Yup.string().required('El tipo de socio es obligatorio'),
   });
 
- 
-
-  
-
   const handleSubmit = async (values) => {
     if (!rostroDescriptor) {
-      alert('Por favor capture el rostro antes de registrar.');
+      setSnackbarMessage('Por favor capture el rostro antes de registrar.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
       return;
     }
 
@@ -63,12 +71,20 @@ const [tiposSocio, setTiposSocio] = useState([]);
         face_descriptor: rostroDescriptor,
       };
       await crearSocioApi(socioConRostro);
-      alert('Socio registrado exitosamente.');
-      navigate('/gestion-estudiante');
+      setSnackbarMessage('Socio registrado exitosamente.');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      setTimeout(() => navigate('/gestion-estudiante'), 1500);
     } catch (error) {
       console.error('Error registrando socio:', error);
-      alert('Error registrando socio: ' + (error.response?.message || error.message));
+      setSnackbarMessage('Error registrando socio: ' + (error.response?.message || error.message));
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -92,14 +108,12 @@ const [tiposSocio, setTiposSocio] = useState([]);
         {({ setFieldValue, values, touched, errors }) => (
           <Form>
             <Grid container spacing={2}>
-              {/* Carnet */}
-              <Grid size={{ xs: 12 }}>
+              <Grid size={{ xs: 12}}>
                 <Field as={TextField} label="Carnet de Identidad" fullWidth name="codigo"
                   error={touched.codigo && Boolean(errors.codigo)}
                   helperText={touched.codigo && errors.codigo} required />
               </Grid>
 
-              {/* Nombre y Apellido */}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Field as={TextField} label="Nombre" fullWidth name="nombre"
                   error={touched.nombre && Boolean(errors.nombre)}
@@ -111,20 +125,19 @@ const [tiposSocio, setTiposSocio] = useState([]);
                   helperText={touched.apellido && errors.apellido} required />
               </Grid>
 
-              {/* Correo */}
               <Grid size={{ xs: 12 }}>
                 <Field as={TextField} label="Correo" type="email" fullWidth name="correo"
                   error={touched.correo && Boolean(errors.correo)}
                   helperText={touched.correo && errors.correo} required />
               </Grid>
 
-              {/* Fecha y Carrera */}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Field as={TextField} label="Fecha de Nacimiento" type="date" fullWidth name="fecha_nacimiento"
                   InputLabelProps={{ shrink: true }}
                   error={touched.fecha_nacimiento && Boolean(errors.fecha_nacimiento)}
                   helperText={touched.fecha_nacimiento && errors.fecha_nacimiento} required />
               </Grid>
+
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth required error={touched.tipo_socio && Boolean(errors.tipo_socio)}>
                   <InputLabel>Carrera</InputLabel>
@@ -135,24 +148,22 @@ const [tiposSocio, setTiposSocio] = useState([]);
                     label="Carrera"
                   >
                     <MenuItem value=""><em>Seleccione una carrera</em></MenuItem>
-                    {tiposSocio.map((tipo, index) => (
-                      <MenuItem key={tipo.id_tipo_socio} value={tipo.id_tipo_socio}>
-  {tipo.nombre_tipo}
-</MenuItem>
+                    {tiposSocio.map((tipo) => (
+                      <MenuItem key={tipo.id_tipo } value={tipo.id_tipo }>
+                        {tipo.nombre_tipo}
+                      </MenuItem>
                     ))}
                   </Select>
                   <FormHelperText>{touched.tipo_socio && errors.tipo_socio}</FormHelperText>
                 </FormControl>
               </Grid>
 
-              {/* Registro facial */}
               <Grid size={{ xs: 12 }}>
                 <CapturaRostro onCapture={({ image, descriptor }) => {
                   setRostroDescriptor(descriptor);
                 }} />
               </Grid>
 
-              {/* Botones */}
               <Grid size={{ xs: 12 }} sx={{ mt: 2 }}>
                 <Box display="flex" justifyContent="space-between">
                   <Button variant="contained" color="error" onClick={() => navigate('/gestion-estudiante')}>
@@ -168,6 +179,25 @@ const [tiposSocio, setTiposSocio] = useState([]);
           </Form>
         )}
       </Formik>
+
+      {/* Snackbar de notificaciones */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+        action={
+          <IconButton size="small" color="inherit" onClick={handleSnackbarClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        }
+        ContentProps={{
+          style: {
+            backgroundColor: snackbarSeverity === 'error' ? '#f44336' : '#4caf50',
+            color: 'white',
+          },
+        }}
+      />
     </Box>
   );
 };

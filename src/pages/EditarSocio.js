@@ -18,7 +18,10 @@ import {
   InputLabel,
   Box,
   FormHelperText,
+  Snackbar,
+  IconButton,
 } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import CapturaRostro from '../components/CapturaRostro';
 
 const EditarSocio = () => {
@@ -37,6 +40,10 @@ const EditarSocio = () => {
   const [rostroDescriptor, setRostroDescriptor] = useState(null);
   const [tiposSocio, setTiposSocio] = useState([]);
 
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
   const validationSchema = Yup.object({
     nombre: Yup.string().required('El nombre es obligatorio'),
     apellido: Yup.string().required('El apellido es obligatorio'),
@@ -51,10 +58,11 @@ const EditarSocio = () => {
       const fechaFormateada = response.fecha_nacimiento
         ? new Date(response.fecha_nacimiento).toISOString().split('T')[0]
         : '';
+      console.log('response:', response); // <-- Agregado para debug
       setSocio({
         ...response,
         fecha_nacimiento: fechaFormateada,
-        tipo_socio: response.tipo_socio?.id_tipo_socio || '', // Asegura que el valor coincida con el select
+        tipo_socio: response.tipo_socio || '', // <-- Solo el valor, ya es el id
       });
     } catch (error) {
       console.error('Error al cargar los datos del socio:', error);
@@ -64,7 +72,7 @@ const EditarSocio = () => {
   const cargarTiposSocio = async () => {
     try {
       const data = await obtenerTiposSocio();
-      setTiposSocio(data.nombre_tipo ? [data] : data); // asegúrate que sea un array
+      setTiposSocio(data.nombre_tipo ? [data] : data);
     } catch (error) {
       console.error('Error al cargar tipos de socio:', error);
     }
@@ -72,17 +80,26 @@ const EditarSocio = () => {
 
   const handleSubmit = async (values) => {
     try {
+      console.log('Valores del formulario:', values); // <-- Agregado para debug
       const socioActualizado = {
         ...values,
         ...(rostroDescriptor && { face_descriptor: rostroDescriptor }),
       };
       await actualizarSocioApi(codigo, socioActualizado);
-      alert('Estudiante actualizado exitosamente.');
-      navigate('/gestion-estudiante');
+      setSnackbarMessage('Estudiante actualizado exitosamente');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      setTimeout(() => navigate('/gestion-estudiante'), 1500); // redirige con retraso
     } catch (error) {
       console.error('Error actualizando estudiante:', error);
-      alert('Error actualizando estudiante: ' + (error.response?.message || error.message));
+      setSnackbarMessage('Error actualizando estudiante: ' + (error.response?.message || error.message));
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   useEffect(() => {
@@ -105,7 +122,6 @@ const EditarSocio = () => {
         {({ setFieldValue, values, touched, errors }) => (
           <Form>
             <Grid container spacing={2}>
-              {/* CI */}
               <Grid size={{ xs: 12 }}>
                 <Field
                   as={TextField}
@@ -117,7 +133,6 @@ const EditarSocio = () => {
                 />
               </Grid>
 
-              {/* Nombre y Apellido */}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Field
                   as={TextField}
@@ -141,7 +156,6 @@ const EditarSocio = () => {
                 />
               </Grid>
 
-              {/* Correo */}
               <Grid size={{ xs: 12 }}>
                 <Field
                   as={TextField}
@@ -155,7 +169,6 @@ const EditarSocio = () => {
                 />
               </Grid>
 
-              {/* Fecha de Nacimiento y Tipo */}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Field
                   as={TextField}
@@ -184,24 +197,25 @@ const EditarSocio = () => {
                     label="Carrera"
                   >
                     <MenuItem value=""><em>Seleccione una carrera</em></MenuItem>
-                    {tiposSocio.map((tipo) => (
-                      <MenuItem key={tipo.id_tipo_socio} value={tipo.id_tipo_socio}>
-                        {tipo.nombre_tipo}
-                      </MenuItem>
-                    ))}
+                    {tiposSocio.map((tipo) => {
+                      console.log('tipo:', tipo); // <-- Agregado para debug
+                      return (
+                        <MenuItem key={tipo.id_tipo} value={tipo.id_tipo}>
+                          {tipo.nombre_tipo}
+                        </MenuItem>
+                      );
+                    })}
                   </Select>
                   <FormHelperText>{touched.tipo_socio && errors.tipo_socio}</FormHelperText>
                 </FormControl>
               </Grid>
 
-              {/* Captura Facial */}
               <Grid size={{ xs: 12 }}>
                 <CapturaRostro
                   onCapture={({ image, descriptor }) => setRostroDescriptor(descriptor)}
                 />
               </Grid>
 
-              {/* Botones */}
               <Grid size={{ xs: 12 }}>
                 <Box display="flex" justifyContent="space-between" mt={2}>
                   <Button variant="contained" color="error" onClick={() => navigate('/gestion-estudiante')}>
@@ -216,6 +230,24 @@ const EditarSocio = () => {
           </Form>
         )}
       </Formik>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+        action={
+          <IconButton size="small" color="inherit" onClick={handleSnackbarClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        }
+        ContentProps={{
+          style: {
+            backgroundColor: snackbarSeverity === 'error' ? '#f44336' : '#4caf50',
+            color: 'white',
+          },
+        }}
+      />
     </Box>
   );
 };
